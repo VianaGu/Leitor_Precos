@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" href="../favicon/favicon.ico type="image/x-icon">
+  <title>Consulta de Preço</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #4169E1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+      color: #333;
+    }
+
+    input[type="text"] {
+      padding: 0.75rem 1rem;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+
+    #resultado h2 {
+      margin: 0.5rem 0 0.25rem;
+      font-size: 1.4rem;
+      color: #2e7d32;
+    }
+
+    #resultado p {
+      font-size: 1.2rem;
+      margin: 0.25rem 0;
+    }
+
+    .erro {
+      color: #d32f2f;
+    }
+
+    .vendedor {
+      color: #4169E1;
+      font-weight: bold;
+    }
+
+    #fullscreen-btn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #1e90ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    #logo {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      width: 160px;
+      height: auto;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo no canto superior esquerdo -->
+  <img src="logo.jpg" alt="Tintas Vila Nova" id="logo">
+
+  <!-- Botão tela cheia no canto superior direito -->
+  <button id="fullscreen-btn">🔳 Tela cheia</button>
+
+  <!-- Container principal -->
+  <div class="container">
+    <h1>Leitor de Preços</h1>
+    <input
+      type="text"
+      id="codigo"
+      autocomplete="off"
+      placeholder="escaneie o código de barras"
+      autofocus
+    />
+    <div id="resultado"></div>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const input = document.getElementById("codigo");
+    const resultado = document.getElementById("resultado");
+    const fullscreenBtn = document.getElementById("fullscreen-btn");
+
+    function formatarPreco(valor) {
+      const numero = parseFloat(valor);
+      if (isNaN(numero)) return "R$ 0,00";
+      return numero.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        const codigo = input.value.trim();
+        if (!codigo) return;
+
+        resultado.innerHTML = "🔍 Buscando...";
+
+        try {
+          const res = await fetch("/buscar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ codigo })
+          });
+
+          const dados = await res.json();
+
+          setTimeout(() => {
+            if (res.ok) {
+              const precoOriginal = parseFloat(dados.preco);
+
+              if (!precoOriginal || precoOriginal === 0) {
+                resultado.innerHTML = `
+                  <p class="erro">ERRO 001</p>
+                  <p class="vendedor">chame um vendedor</p>
+                `;
+              } else {
+                const precoPrazo = precoOriginal * 1.10;
+                resultado.innerHTML = `
+                  <h2>${dados.produto}</h2>
+                  <p>À vista: ${formatarPreco(precoOriginal)}</p>
+                  <p>A prazo: ${formatarPreco(precoPrazo)}</p>
+                `;
+              }
+            } else {
+              resultado.innerHTML = `<p class="erro">${dados.erro}</p>`;
+            }
+          }, 100); // Exibir resultado após 3 segundos
+        } catch (err) {
+          setTimeout(() => {
+            resultado.innerHTML = `<p class="erro">Erro de conexão com o servidor.</p>`;
+          }, 100);
+        }
+
+        input.value = "";
+      }
+    });
+
+    fullscreenBtn.addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      if (document.fullscreenElement) {
+        fullscreenBtn.textContent = "❌ Sair da tela cheia";
+      } else {
+        fullscreenBtn.textContent = "🔳 Tela cheia";
+      }
+    });
+  </script>
+</body>
+</html>
