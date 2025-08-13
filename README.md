@@ -99,7 +99,7 @@ Busca um produto pelo código.
      ```
      C:/Windows/System32/drivers/etc/hosts
      ```
-  4. Substitua o IP `172.16.0.139` pelo IPv4 obtido.
+  4. Substitua o IP `172.16......` pelo IPv4 obtido.
 
 ---
 
