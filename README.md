@@ -30,7 +30,7 @@ Foi desenvolvido para uso interno em redes locais, facilitando a busca de preço
 
 1. **Clone este repositório**
 ```bash
-git clone https://github.com/seuusuario/leitor-dbf.git
+git clone (https://github.com/VianaGu/Leitor_Precos.git)
 cd leitor-dbf
 ```
 
